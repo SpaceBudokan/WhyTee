@@ -1,4 +1,4 @@
-# WhyTee v0
+# WhyTee
 YouTube from the command line.
 Version 0.1
 
