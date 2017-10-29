@@ -1,0 +1,145 @@
+#!/usr/bin/python3
+
+"""
+WhyTee v0.1
+Copyright 2017, SpaceBudokan
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+import argparse
+from apiclient.discovery import build
+from apiclient.errors import HttpError
+
+#Put your API key on the next line
+DEVELOPER_KEY = "REPLACE_WITH_YOUR API_KEY"
+YOUTUBE_API_SERVICE_NAME = "youtube"
+YOUTUBE_API_VERSION = "v3"
+
+youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+                developerKey=DEVELOPER_KEY)
+
+def print_vidlist(result):
+    global youtube
+
+    for results in result.get("items", []):
+        if args.title:
+            print(results["snippet"]["title"])
+        if args.url:
+            print("https://youtu.be/" + results["id"]["videoId"])
+        if args.url_full:
+            print("https://www.youtube.com/watch?v=" + results["id"]["videoId"])
+        if args.video_id:
+            print(results["id"]["videoId"])
+        if args.description:
+            print(results["snippet"]["description"])
+        if args.channel_title:
+            print(results["snippet"]["channelTitle"])
+        if args.channel_id:
+            print(results["snippet"]["channelId"])
+        if args.date:
+            print(results["snippet"]["publishedAt"])
+        if args.length:
+            global youtube
+            details = youtube.videos().list(
+                part="contentDetails",
+                id=results["id"]["videoId"]
+            ).execute()
+            for x in details.get("items", []):
+                print(x["contentDetails"]["duration"])
+        if args.thumb:
+            print(results["snippet"]["thumbnails"]["default"]["url"])
+        print('')
+
+
+def youtube_related(args):
+    global youtube
+
+    result = youtube.search().list(
+        relatedToVideoId=args.N,
+        part="id,snippet",
+        maxResults=args.max_results,
+        type="video"
+    ).execute()
+
+    print_vidlist(result)
+
+
+def youtube_channel(args):
+    global youtube
+
+    result = youtube.search().list(
+        channelId=args.N,
+        part="id,snippet",
+        maxResults=args.max_results,
+        type="video"
+    ).execute()
+
+    print_vidlist(result)
+
+
+def youtube_search(args):
+    global youtube
+
+    result = youtube.search().list(
+        q=args.N,
+        part="id,snippet",
+        maxResults=args.max_results,
+        type="video"
+    ).execute()
+
+    print_vidlist(result)
+    
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="YouTube for commandos")
+    group1 = parser.add_mutually_exclusive_group()
+#    group2 = parser.add_mutually_exclusive_group()
+    parser.add_argument("N", help="Search Terms, User, or video ID to search for.")
+
+    parser.add_argument("-t", "--title", help="Display titles of results", action="store_true")
+    parser.add_argument("-u", "--url", help="Display short url of results", action="store_true")
+    parser.add_argument("-U", "--url_full", help="Display full url of results", action="store_true")
+    parser.add_argument("-i", "--video_id", help="Display 11 character ID's of results", action="store_true")
+    parser.add_argument("-d", "--description", help="Display descriptions of results", action="store_true")
+    parser.add_argument("-c", "--channel_title", help="Display channel titles of results", action="store_true")
+    parser.add_argument("-C", "--channel_id", help="Display channel ID of results", action="store_true")
+    parser.add_argument("-D", "--date", help="Display dates results were published", action="store_true")
+    parser.add_argument("-l", "--length", help="Display video length. NOTE: This requires an extra API call", action="store_true")
+    parser.add_argument("-T", "--thumb", help="Display URL of thumbnails of results", action="store_true")
+    parser.add_argument("-m", "--max_results", help="Number of videos to return (default=10)", type=int, default=10)
+    
+    group1.add_argument("-s", "--search", help="Perform search using N", action="store_true")
+    group1.add_argument("-a", "--channel", help="Returns videos for a specific channel ID, NOT channel title.", action="store_true")
+    group1.add_argument("-r", "--related", help="Returns videos related to ID",action="store_true")
+
+    args = parser.parse_args()
+    
+    if args.search:
+        try:
+            youtube_search(args)
+        except(HttpError, e):
+            print("HTTP error %d:\n%s" % (e.resp.status, e.content))
+
+    if args.channel:
+        try:
+            youtube_channel(args)
+        except(HttpError, e):
+            print("HTTP error %d:\n%s" % (e.resp.status, e.content))
+
+    if args.related:
+        try:
+            youtube_related(args)
+        except(HttpError, e):
+            print("HTTP error %d:\n%s" % (e.resp.status, e.content))
