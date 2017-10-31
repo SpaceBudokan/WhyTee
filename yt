@@ -125,21 +125,20 @@ if __name__ == "__main__":
     group1.add_argument("-r", "--related", help="Returns videos related to ID",action="store_true")
 
     args = parser.parse_args()
+
     
     if args.search:
         try:
             youtube_search(args)
-        except(HttpError, e):
+        except HttpError as e:
             print("HTTP error %d:\n%s" % (e.resp.status, e.content))
-
     if args.channel:
         try:
             youtube_channel(args)
-        except(HttpError, e):
+        except HttpError as e:
             print("HTTP error %d:\n%s" % (e.resp.status, e.content))
-
     if args.related:
         try:
             youtube_related(args)
-        except(HttpError, e):
+        except HttpError as e:
             print("HTTP error %d:\n%s" % (e.resp.status, e.content))
