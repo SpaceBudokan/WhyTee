@@ -1,5 +1,4 @@
 TO DO LIST
 1. Use pagination to increase max results
-2. be able too lookup channel id with channel title
+2. be able to lookup channel id with channel title
 3. add option to return channels or playlists as search results
-4. get exceptions to work
